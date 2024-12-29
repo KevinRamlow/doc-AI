@@ -138,7 +138,7 @@ def semantic_search(embedding, top_k=3):
   return results
 
 # Geração de documentação com a OpenAI
-def generate_documentation(code, context):
+def generate_documentation(code, doc_exemple):
   prompt = f"""
 <Persona>
 Você é um especialista em gerar documentações técnicas detalhadas, claras e completas para códigos. Sua documentação deve ser focada na explicação passo a passo, com exemplos práticos de uso, detalhamento de parâmetros e tipos de retorno, além de especificar como tratar exceções e erros comuns. A documentação deve ser acessível para desenvolvedores iniciantes e experientes.
@@ -148,15 +148,16 @@ Você é um especialista em gerar documentações técnicas detalhadas, claras e
 - Crie uma documentação profissional e completa para os arquivos dentro do Código, incluindo uma visão geral, exemplos de uso, instruções de utilização, detalhes sobre parâmetros e tipos de retorno, e tratamento de exceções.
 - Para cada função ou módulo, forneça um exemplo de código funcional, teste unitário, e a explicação do comportamento esperado em diferentes cenários.
 - Escreva a documentação de forma que facilite o onboarding de novos desenvolvedores.
+- Utilize da documentação existente no Exemple como referência para gerar a nova documentação.
 </ToDo>
 
-<Context>
-{context}
-</Context>
+<Example>
+{doc_exemple}
+</Example>
 
-<Código>
+<Code>
 {code}
-</Código>
+</Code>
 """
 
   response = client.chat.completions.create(
