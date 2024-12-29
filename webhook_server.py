@@ -88,7 +88,7 @@ def webhook():
     # Enviar o embbeded_documentation para o Pinecone com id com nome da branch
     response = index.upsert(
       vectors=[
-        {"id": data["pull_request"]["head"]["ref"], "values": embbeded_documentation}
+        {"id": data["pull_request"]["head"]["ref"], "values": embbeded_documentation, "metadata": {"documentation": documentation}}
       ]
     )
     print("Documentação enviada para o Pinecone:", response)
@@ -165,7 +165,7 @@ Você é um especialista em gerar documentações técnicas detalhadas, claras e
       {"role": "system", "content": "Você é um assistente responsável por gerar documentações técnicas."},
       {"role": "user", "content": prompt}
     ],
-    temperature=0.7
+    temperature=0.5
   )
 
   return response.choices[0].message.content
