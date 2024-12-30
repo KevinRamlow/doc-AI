@@ -1,11 +1,10 @@
-# webhook_server.py
-
-from flask import Flask, request, jsonify
-import requests
-from pinecone import Pinecone, ServerlessSpec
-from openai import OpenAI
 import os
+import base64
+import requests
+from openai import OpenAI
+from pinecone import Pinecone
 from dotenv import load_dotenv
+from flask import Flask, request, jsonify
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -34,9 +33,9 @@ def webhook():
   data = request.json
 
   # Verificar se a pull request é do tipo opened ou reopened e se é para a branch main
+  print("action:", data["action"])
   if data["action"] not in ["opened", "reopened"] or data["pull_request"]["base"]["ref"] != "main":
     return jsonify({}), 204
-  print("action:", data["action"])
 
   # Dados da pull request para acessar a API do GitHub
   user = data["pull_request"]["user"]["login"]
@@ -53,19 +52,25 @@ def webhook():
   if response.status_code == 200:
     files = response.json()
 
-    # Processar os patches dos arquivos
+    # Processar os arquivos
     result = []
     for file in files:
-      patch = file.get("patch", "")
-      if patch:
-        clean_patch = "\n".join(
-          line for line in patch.split("\n") if not line.startswith("@@")
-        )
-      result.append(f"Nome do arquivo: {file['filename']}\n\n{clean_patch}\n\n")
+        # Buscar o conteúdo completo do arquivo
+        contents_url = file.get("contents_url")
+        if contents_url:
+            content_response = requests.get(contents_url, headers=headers)
+            if content_response.status_code == 200:
+                file_data = content_response.json()
+                # O conteúdo está em Base64
+                file_content = base64.b64decode(file_data["content"]).decode("utf-8")
+                result.append(f"Nome do arquivo: {file['filename']}\n\n{file_content}\n\n")
+            else:
+                print(f"Erro ao buscar conteúdo do arquivo {file['filename']}: {content_response.status_code}")
+        else:
+            print(f"URL de conteúdo não encontrada para o arquivo {file['filename']}")
 
-    formatted_result = "\n".join(result)
-    print("Resultado Processado:")
-    print(formatted_result)
+        formatted_result = "\n".join(result)
+        print("Resultado Processado:", formatted_result)
 
     # Gerar o embedding do código
     embedding = generate_embedding(formatted_result)
