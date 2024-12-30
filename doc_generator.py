@@ -27,8 +27,8 @@ if PINECONE_INDEX not in pinecone.list_indexes().names():
   raise ValueError(f"O índice '{PINECONE_INDEX}' não foi encontrado no Pinecone.")
 index = pinecone.Index(PINECONE_INDEX)
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
+@app.route("/generate-doc", methods=["POST"])
+def generate_doc():
   # Receber os dados do webhook
   data = request.json
 
